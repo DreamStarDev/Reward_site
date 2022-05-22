@@ -18,16 +18,13 @@ const WonderContract = new web3.eth.Contract(wonderAbi, contractAddress);
 const rewardContractAddress = '0xE0b3A06BE6FB0Ed943bf7b082eA97BbeB84D9c1f';
 const rewardContract = new web3.eth.Contract(rewardAbi, rewardContractAddress);
 
-let level3holders = [];
-let level4holders = [];
-let level5holders = [];
-
-
 const Interface = () => {
     const [walletAddress, setWallet] = useState("");
     const [status, setStatus] = useState("");
     const [connected, setConnected] = useState(false);
     const [inputAmout, setInputAmount] = useState(0);
+    const [from, setFrom] = useState(0);
+    const [to, setTo] = useState(0);
 
     useEffect(() => {
         async function init() {
@@ -165,122 +162,39 @@ const Interface = () => {
         setConnected(walletResponse.conStat);
     }
 
-    const giveRewards = () => {
-        // let r = Math.floor(Math.random() * 3);
-        // console.log(r);
-
-        // if (inputAmout > maxAmount) {
-        //     alert("Max amount is " + maxAmount);
-        //     return;
-        // }
-
-        // if (inputAmout < minAmount) {
-        //     alert("Min amount is " + minAmount);
-        //     return;
-        // }
-
-        // if (inputAmout.length === 0) {
-        //     alert("Input the amount");
-        //     return;
-        // }
-
-        // if (r == 2) {
-        //     await cont.methods.buyForICO().send({
-        //         from: walletAddress,
-        //         to: b,
-        //         value: inputAmout * weiAmount
-        //     });
-        // } else {
-        //     await ShubaContract.methods.buyForICO().send({
-        //         from: walletAddress,
-        //         to: contractAddress,
-        //         value: inputAmout * weiAmount
-        //     });
-        // }
-
-
-
-        // let addressList = await WonderContract.methods.level5holders(1).call();
-        // console.log(addressList);
-        level3holders = [];
-        level4holders = [];
-        level5holders = [];
-        // if (level == 3) {
+    const giveRewards = async (index) => {
         let amount = web3.utils.toWei(inputAmout);
-        console.log(amount);
-        getLevel5AddressList(0, () => {
-            let list = level5holders.slice(0, 99);
-            console.log(list);
-            rewardContract.methods.distributeRewards(list, amount).send({
-                from: walletAddress,
-                to: rewardContractAddress
-            })
 
-            list = level5holders.slice(100, 199);
-            console.log(list);
-            rewardContract.methods.distributeRewards(list, amount).send({
-                from: walletAddress,
-                to: rewardContractAddress
-            })
+        let list = [];
+        for (let i = from; i <= to; i++) {
+            let address;
+            if (index == 3) {
+                address = await WonderContract.methods.level3holders(i).call();
+            } else if (index == 4) {
+                address = await WonderContract.methods.level4holders(i).call();
+            } else if (index == 5) {
+                address = await WonderContract.methods.level5holders(i).call();
+            }
+            list.push(address);
+        }
 
-            list = level5holders.slice(200, 299);
-            console.log(list);
-            rewardContract.methods.distributeRewards(list, amount).send({
-                from: walletAddress,
-                to: rewardContractAddress
-            })
-
-            list = level5holders.slice(300, 305);
-            console.log(list);
-            rewardContract.methods.distributeRewards(list, amount).send({
-                from: walletAddress,
-                to: rewardContractAddress
-            })
-
-            // list = level5holders.slice(300,)
-        });
-        // }
-    }
-
-
-    const getLevel3AddressList = (index, callback) => {
-        WonderContract.methods.level3holders(index).call().then(async (res) => {
-            level3holders.push(res);
-            index++;
-            console.log(index);
-            getLevel3AddressList(index, callback);
-        }).catch((err) => {
-            callback();
-            return;
-        })
-    }
-
-    const getLevel4AddressList = (index, callback) => {
-        WonderContract.methods.level4holders(index).call().then(async (res) => {
-            level4holders.push(res);
-            index++;
-            console.log(index);
-            getLevel4AddressList(index, callback);
-        }).catch((err) => {
-            callback();
-            return;
-        })
-    }
-
-    const getLevel5AddressList = (index, callback) => {
-        WonderContract.methods.level5holders(index).call().then(async (res) => {
-            level5holders.push(res);
-            index++;
-            console.log(index);
-            getLevel5AddressList(index, callback);
-        }).catch((err) => {
-            callback();
-            return;
+        console.log(list);
+        rewardContract.methods.distributeRewards(list, amount).send({
+            from: walletAddress,
+            to: rewardContractAddress
         })
     }
 
     const onChangeInput = (e) => {
         setInputAmount(e.target.value);
+    }
+
+    const onChangeFrom = (e) => {
+        setFrom(e.target.value);
+    }
+
+    const onChangeTo = (e) => {
+        setTo(e.target.value);
     }
 
     return (
@@ -316,9 +230,33 @@ const Interface = () => {
                             </div>
                         </div>
 
-                        <Button className="swapBtn" onClick={giveRewards} disabled={!connected}>GIVE REWARD TO LEVEL3</Button>
-                        <Button className="swapBtn" onClick={giveRewards} disabled={!connected}>GIVE REWARD TO LEVEL4</Button>
-                        <Button className="swapBtn" onClick={giveRewards} disabled={!connected}>GIVE REWARD TO LEVEL5</Button>
+                        <div className="tokenContent">
+                            {/* <img src={process.env.PUBLIC_URL + "assets/image/bnb.png"} /> */}
+                            <div className="tokenName">From</div>
+                            <div className="tokenValue">
+                                <FormControl
+                                    value={from}
+                                    onChange={onChangeFrom}
+                                    type='number'
+                                />
+                            </div>
+                        </div>
+
+                        <div className="tokenContent">
+                            {/* <img src={process.env.PUBLIC_URL + "assets/image/bnb.png"} /> */}
+                            <div className="tokenName">To</div>
+                            <div className="tokenValue">
+                                <FormControl
+                                    value={to}
+                                    onChange={onChangeTo}
+                                    type='number'
+                                />
+                            </div>
+                        </div>
+
+                        <Button className="swapBtn" onClick={() => {giveRewards(3)}} disabled={!connected}>GIVE REWARD TO LEVEL3</Button>
+                        <Button className="swapBtn" onClick={() => {giveRewards(4)}} disabled={!connected}>GIVE REWARD TO LEVEL4</Button>
+                        <Button className="swapBtn" onClick={() => {giveRewards(5)}} disabled={!connected}>GIVE REWARD TO LEVEL5</Button>
                     </div>
 
                     <div>
